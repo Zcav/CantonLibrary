@@ -16,12 +16,13 @@
      ============================================================ -->
 <script>
   const FIREBASE_CONFIG = {
-    apiKey:            "AIzaSyCpcLXfCKWXzCHUxPBEHGtUyAFtNPZXn0Y",
-    authDomain:        "canton-personal-library.firebaseapp.com",
-    projectId:         "canton-personal-library",
-    storageBucket:     "canton-personal-library.firebasestorage.app",
-    messagingSenderId: "721947590298",
-    appId:             "G-M62SPLESY4"
+    apiKey: "AIzaSyCpcLXfCKWXzCHUxPBEHGtUyAFtNPZXn0Y",
+  authDomain: "canton-personal-library.firebaseapp.com",
+  projectId: "canton-personal-library",
+  storageBucket: "canton-personal-library.firebasestorage.app",
+  messagingSenderId: "721947590298",
+  appId: "1:721947590298:web:58d4b6b9feab9264aba923",
+  measurementId: "G-M62SPLESY4"
   };
 </script>
 
@@ -231,6 +232,73 @@ label{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.25em;color:var(
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:.5rem;}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* ── AUTO-ASSIGN TAB ── */
+.aa-layout{display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;align-items:start;}
+.aa-panel{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1.5rem;}
+.aa-panel-title{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.3em;color:var(--accent);text-transform:uppercase;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid var(--border);}
+.aa-rule-form{display:flex;flex-direction:column;gap:1rem;}
+.aa-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
+.aa-label{font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.2em;color:var(--text3);text-transform:uppercase;margin-bottom:.35rem;display:block;}
+.aa-select{width:100%;padding:.65rem .8rem;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:15px;border-radius:4px;outline:none;cursor:pointer;transition:border-color .2s;}
+.aa-select:focus{border-color:var(--accent);}
+.aa-input{width:100%;padding:.65rem .8rem;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:15px;border-radius:4px;outline:none;transition:border-color .2s;}
+.aa-input:focus{border-color:var(--accent);}
+.aa-type-tabs{display:flex;gap:0;border:1px solid var(--border);border-radius:4px;overflow:hidden;}
+.aa-type-tab{flex:1;font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;padding:.55rem .5rem;border:none;background:transparent;color:var(--text3);cursor:pointer;transition:all .2s;text-align:center;}
+.aa-type-tab.active{background:var(--accent-dim);color:var(--accent);border-bottom:2px solid var(--accent);}
+.aa-type-tab:hover:not(.active){color:var(--text2);background:var(--surface);}
+.btn-add-rule{font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;padding:.7rem 1.4rem;border:none;background:var(--accent);color:#0d0b0e;border-radius:3px;cursor:pointer;transition:all .2s;width:100%;margin-top:.25rem;}
+.btn-add-rule:hover{background:var(--accent2);}
+
+/* Rules list */
+.rules-list{display:flex;flex-direction:column;gap:.6rem;margin-top:1rem;}
+.rule-item{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.85rem 1rem;display:flex;align-items:center;gap:.75rem;transition:border-color .2s;}
+.rule-item:hover{border-color:var(--border2);}
+.rule-item-icon{font-size:1.1rem;flex-shrink:0;}
+.rule-item-body{flex:1;min-width:0;}
+.rule-item-label{font-size:.88rem;color:var(--text);line-height:1.3;}
+.rule-item-label strong{color:var(--accent2);}
+.rule-item-dest{font-family:'Cinzel',serif;font-size:.52rem;letter-spacing:.15em;color:var(--green);margin-top:.2rem;}
+.rule-item-type{font-family:'Cinzel',serif;font-size:.48rem;letter-spacing:.15em;color:var(--text3);text-transform:uppercase;margin-top:.1rem;}
+.rule-item-actions{display:flex;gap:.4rem;flex-shrink:0;}
+.btn-rule-del{background:transparent;border:1px solid rgba(201,110,110,.25);color:var(--red);border-radius:3px;padding:.3rem .55rem;cursor:pointer;font-size:.75rem;transition:all .2s;}
+.btn-rule-del:hover{background:rgba(201,110,110,.1);}
+.btn-rule-run{background:var(--accent-dim);border:1px solid rgba(201,169,110,.3);color:var(--accent);border-radius:3px;padding:.3rem .65rem;cursor:pointer;font-family:'Cinzel',serif;font-size:.5rem;letter-spacing:.12em;text-transform:uppercase;transition:all .2s;}
+.btn-rule-run:hover{background:var(--accent);color:#0d0b0e;}
+.rules-empty{text-align:center;padding:2.5rem 1rem;color:var(--text3);font-style:italic;font-size:.9rem;}
+
+/* Unassigned panel */
+.unassigned-count{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:300;color:var(--accent);line-height:1;}
+.unassigned-sub{font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.2em;color:var(--text3);text-transform:uppercase;margin-top:.2rem;margin-bottom:1.25rem;}
+.unassigned-list{display:flex;flex-direction:column;gap:.5rem;max-height:340px;overflow-y:auto;}
+.unassigned-item{display:flex;align-items:center;gap:.75rem;padding:.6rem .8rem;background:var(--surface);border:1px solid var(--border);border-radius:4px;}
+.unassigned-item-cover{width:28px;height:42px;object-fit:cover;border-radius:2px;flex-shrink:0;background:var(--bg3);}
+.unassigned-item-cover-ph{width:28px;height:42px;background:var(--bg3);border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.8rem;}
+.unassigned-item-info{flex:1;min-width:0;}
+.unassigned-item-title{font-family:'Cormorant Garamond',serif;font-size:.9rem;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.unassigned-item-meta{font-size:.75rem;color:var(--text3);font-style:italic;}
+.btn-run-all{font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;padding:.7rem 1.4rem;border:1px solid var(--accent);background:var(--accent-dim);color:var(--accent);border-radius:3px;cursor:pointer;transition:all .2s;width:100%;margin-top:1rem;}
+.btn-run-all:hover{background:var(--accent);color:#0d0b0e;}
+.btn-run-all:disabled{opacity:.4;cursor:not-allowed;}
+
+/* Conflict modal */
+.conflict-modal{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;max-width:520px;width:100%;box-shadow:0 20px 80px rgba(0,0,0,.8);animation:slideModal .25s ease;padding:2rem;}
+.conflict-title{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:300;font-style:italic;color:var(--text);margin-bottom:.4rem;}
+.conflict-sub{font-size:.85rem;color:var(--text3);margin-bottom:1.25rem;}
+.conflict-book{display:flex;align-items:center;gap:.75rem;padding:.75rem;background:var(--surface);border-radius:4px;margin-bottom:1.25rem;}
+.conflict-book-title{font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;color:var(--text);}
+.conflict-book-meta{font-size:.8rem;color:var(--text2);font-style:italic;}
+.conflict-rules{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.25rem;}
+.conflict-rule-btn{display:flex;align-items:center;gap:.75rem;padding:.7rem 1rem;background:var(--surface);border:1px solid var(--border);border-radius:4px;cursor:pointer;transition:all .2s;text-align:left;}
+.conflict-rule-btn:hover{border-color:var(--accent);background:var(--accent-dim);}
+.conflict-rule-btn .crb-label{font-size:.88rem;color:var(--text);flex:1;}
+.conflict-rule-btn .crb-dest{font-family:'Cinzel',serif;font-size:.52rem;letter-spacing:.12em;color:var(--green);}
+.conflict-skip{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;padding:.6rem 1rem;border:1px solid var(--border2);background:transparent;color:var(--text3);border-radius:3px;cursor:pointer;width:100%;transition:all .2s;}
+.conflict-skip:hover{border-color:var(--text2);color:var(--text2);}
+
+@media(max-width:900px){.aa-layout{grid-template-columns:1fr;}}
+@media(max-width:640px){.aa-row{grid-template-columns:1fr;}}
+
 @media(max-width:1100px){.bookcases-wrap{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:640px){
   header{padding:1.25rem 1.25rem 1rem;}
@@ -277,6 +345,7 @@ label{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.25em;color:var(
     <button class="tab active" onclick="showTab('collection')">Collection</button>
     <button class="tab" onclick="showTab('add')">Add Book</button>
     <button class="tab" onclick="showTab('shelves')">My Library</button>
+    <button class="tab" onclick="showTab('autoassign')">Auto-Assign</button>
   </div>
 
   <!-- COLLECTION -->
@@ -419,7 +488,90 @@ label{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.25em;color:var(
     </div>
     <div class="bookcases-wrap" id="bookcasesWrap"></div>
   </div>
-</main>
+
+  <!-- AUTO-ASSIGN TAB -->
+  <div id="tab-autoassign" style="display:none">
+    <div class="aa-layout">
+
+      <!-- LEFT: Rule builder -->
+      <div class="aa-panel">
+        <div class="aa-panel-title">✦ Create Assignment Rule</div>
+        <div class="aa-rule-form">
+
+          <div>
+            <span class="aa-label">Match books by</span>
+            <div class="aa-type-tabs">
+              <button class="aa-type-tab active" onclick="setRuleType('genre',this)">Genre</button>
+              <button class="aa-type-tab" onclick="setRuleType('author',this)">Author</button>
+              <button class="aa-type-tab" onclick="setRuleType('title',this)">Title contains</button>
+            </div>
+          </div>
+
+          <div>
+            <span class="aa-label" id="ruleValueLabel">Genre to match</span>
+            <div id="ruleValueGenreWrap">
+              <select class="aa-select" id="ruleValueGenre"></select>
+            </div>
+            <div id="ruleValueTextWrap" style="display:none">
+              <input type="text" class="aa-input" id="ruleValueText" placeholder="Type value to match…">
+            </div>
+          </div>
+
+          <div>
+            <span class="aa-label">Assign to</span>
+            <div class="aa-row">
+              <div>
+                <span class="aa-label">Bookcase</span>
+                <select class="aa-select" id="ruleBookcase" onchange="updateRuleShelfOptions()">
+                  <option value="">Select…</option>
+                  <option value="1">Bookcase 1</option>
+                  <option value="2">Bookcase 2</option>
+                  <option value="3">Bookcase 3</option>
+                  <option value="4">Bookcase 4</option>
+                </select>
+              </div>
+              <div>
+                <span class="aa-label">Shelf</span>
+                <select class="aa-select" id="ruleShelf">
+                  <option value="">Select…</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-add-rule" onclick="addRule()">+ Add Rule</button>
+        </div>
+
+        <!-- Rules list -->
+        <div style="margin-top:1.75rem">
+          <div style="font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.2em;color:var(--text3);text-transform:uppercase;margin-bottom:.75rem;">Saved Rules</div>
+          <div class="rules-list" id="rulesList"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Unassigned books + run -->
+      <div class="aa-panel">
+        <div class="aa-panel-title">📚 Unassigned Books</div>
+        <div class="unassigned-count" id="unassignedCount">0</div>
+        <div class="unassigned-sub">books without a shelf</div>
+        <div class="unassigned-list" id="unassignedList"></div>
+        <button class="btn-run-all" id="runAllBtn" onclick="runAllRules()" disabled>Run All Rules on Unassigned Books</button>
+        <div style="margin-top:.75rem;font-size:.8rem;color:var(--text3);font-style:italic;text-align:center" id="aaStatus"></div>
+      </div>
+
+    </div>
+  </div>
+
+<!-- Conflict Resolution Modal -->
+<div id="conflictOverlay" class="modal-overlay" style="display:none">
+  <div class="conflict-modal">
+    <div class="conflict-title">Multiple Rules Match</div>
+    <div class="conflict-sub">This book matches more than one rule. Choose which to apply:</div>
+    <div class="conflict-book" id="conflictBook"></div>
+    <div class="conflict-rules" id="conflictRules"></div>
+    <button class="conflict-skip" onclick="resolveConflict(null)">Skip this book</button>
+  </div>
+</div>
 
 <!-- Modal -->
 <div id="modalOverlay" class="modal-overlay" style="display:none" onclick="closeModal(event)">
@@ -503,6 +655,7 @@ function runFirebaseMode() {
     window._books = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderGrid();
     if (document.getElementById('tab-shelves').style.display !== 'none') renderShelves();
+    if (document.getElementById('tab-autoassign').style.display !== 'none') renderUnassigned();
     document.getElementById('bookCount').textContent = window._books.length;
   }, err => {
     dbDot.className = 'db-dot error';
@@ -622,14 +775,15 @@ function updateShelfOptions() {
 
 // ── TABS ──
 function showTab(tab) {
-  ['collection','add','shelves'].forEach(t =>
+  ['collection','add','shelves','autoassign'].forEach(t =>
     document.getElementById('tab-'+t).style.display = t===tab ? '' : 'none'
   );
   document.querySelectorAll('.tab').forEach((el,i) =>
-    el.classList.toggle('active', ['collection','add','shelves'][i]===tab)
+    el.classList.toggle('active', ['collection','add','shelves','autoassign'][i]===tab)
   );
   if (tab==='add' && !editingId) resetForm();
   if (tab==='shelves') renderShelves();
+  if (tab==='autoassign') initAutoAssign();
 }
 
 function setSort(s, e) {
@@ -1054,6 +1208,268 @@ ua.addEventListener('drop', e=>{
     reader.readAsDataURL(file);
   }
 });
+
+// ── AUTO-ASSIGN ──
+window._rules = JSON.parse(localStorage.getItem('mlRules') || '[]');
+let currentRuleType = 'genre';
+let conflictQueue = [];
+let conflictResolve = null;
+
+function saveRules() {
+  localStorage.setItem('mlRules', JSON.stringify(window._rules));
+  if (window._firebaseMode && window._setDoc && window._db) {
+    const rulesDoc = window._doc(window._db, 'config', 'assignRules');
+    window._setDoc(rulesDoc, { list: window._rules }, { merge: true }).catch(()=>{});
+  }
+}
+
+function setRuleType(type, el) {
+  currentRuleType = type;
+  document.querySelectorAll('.aa-type-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const labels = { genre: 'Genre to match', author: 'Author to match', title: 'Title contains' };
+  document.getElementById('ruleValueLabel').textContent = labels[type];
+  document.getElementById('ruleValueGenreWrap').style.display = type==='genre' ? '' : 'none';
+  document.getElementById('ruleValueTextWrap').style.display = type!=='genre' ? '' : 'none';
+}
+
+function updateRuleShelfOptions() {
+  const bc = parseInt(document.getElementById('ruleBookcase').value);
+  const max = BOOKCASE_SHELVES[bc] || 5;
+  const sel = document.getElementById('ruleShelf');
+  sel.innerHTML = '<option value="">Select…</option>';
+  for (let i=1; i<=max; i++) sel.innerHTML += `<option value="${i}">Shelf ${i}</option>`;
+}
+
+function populateRuleGenreSelect() {
+  const sel = document.getElementById('ruleValueGenre');
+  const genres = allGenres();
+  sel.innerHTML = '<option value="">Select genre…</option>' + genres.map(g=>`<option>${esc(g)}</option>`).join('');
+}
+
+function addRule() {
+  const bookcase = document.getElementById('ruleBookcase').value;
+  const shelf = document.getElementById('ruleShelf').value;
+  if (!bookcase || !shelf) { showToast('Please select a bookcase and shelf.', true); return; }
+
+  let value = '';
+  if (currentRuleType === 'genre') {
+    value = document.getElementById('ruleValueGenre').value;
+  } else {
+    value = document.getElementById('ruleValueText').value.trim();
+  }
+  if (!value) { showToast('Please enter a value to match.', true); return; }
+
+  // Check for duplicate
+  const exists = window._rules.some(r => r.type===currentRuleType && r.value.toLowerCase()===value.toLowerCase() && r.bookcase===bookcase && r.shelf===shelf);
+  if (exists) { showToast('This exact rule already exists.', true); return; }
+
+  window._rules.push({ id: Date.now().toString(), type: currentRuleType, value, bookcase, shelf });
+  saveRules();
+  renderRules();
+  renderUnassigned();
+  showToast('Rule added!', false, true);
+
+  // Reset form
+  document.getElementById('ruleBookcase').value = '';
+  document.getElementById('ruleShelf').innerHTML = '<option value="">Select…</option>';
+  document.getElementById('ruleValueGenre').value = '';
+  document.getElementById('ruleValueText').value = '';
+}
+
+function deleteRule(id) {
+  window._rules = window._rules.filter(r => r.id !== id);
+  saveRules();
+  renderRules();
+  renderUnassigned();
+  showToast('Rule removed.');
+}
+
+function ruleMatches(rule, book) {
+  const type = rule.type;
+  const val = rule.value.toLowerCase();
+  if (type==='genre') return (book.genre||'').toLowerCase() === val;
+  if (type==='author') return (book.author||'').toLowerCase().includes(val);
+  if (type==='title') return (book.title||'').toLowerCase().includes(val);
+  return false;
+}
+
+function typeIcon(type) {
+  return type==='genre' ? '🏷' : type==='author' ? '✍️' : '📖';
+}
+
+function renderRules() {
+  const list = document.getElementById('rulesList');
+  if (!window._rules.length) {
+    list.innerHTML = '<div class="rules-empty">No rules yet. Create one above.</div>';
+    return;
+  }
+  list.innerHTML = window._rules.map(r => `
+    <div class="rule-item">
+      <span class="rule-item-icon">${typeIcon(r.type)}</span>
+      <div class="rule-item-body">
+        <div class="rule-item-label">
+          ${r.type === 'title' ? 'Title contains' : r.type.charAt(0).toUpperCase()+r.type.slice(1)} 
+          <strong>"${esc(r.value)}"</strong>
+        </div>
+        <div class="rule-item-dest">→ Bookcase ${r.bookcase}, Shelf ${r.shelf}</div>
+        <div class="rule-item-type">${r.type} rule</div>
+      </div>
+      <div class="rule-item-actions">
+        <button class="btn-rule-run" onclick="runSingleRule('${r.id}')">Run</button>
+        <button class="btn-rule-del" onclick="deleteRule('${r.id}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function getUnassignedBooks() {
+  return (window._books||[]).filter(b => !b.bookcase || !b.shelf);
+}
+
+function renderUnassigned() {
+  const books = getUnassignedBooks();
+  document.getElementById('unassignedCount').textContent = books.length;
+  const runBtn = document.getElementById('runAllBtn');
+  runBtn.disabled = !books.length || !window._rules.length;
+
+  const list = document.getElementById('unassignedList');
+  if (!books.length) {
+    list.innerHTML = '<div class="rules-empty">All books are assigned to a shelf! 🎉</div>';
+    return;
+  }
+  list.innerHTML = books.map(b => `
+    <div class="unassigned-item">
+      ${b.cover
+        ? `<img class="unassigned-item-cover" src="${b.cover}" loading="lazy">`
+        : `<div class="unassigned-item-cover-ph">📖</div>`}
+      <div class="unassigned-item-info">
+        <div class="unassigned-item-title">${esc(b.title)}</div>
+        <div class="unassigned-item-meta">${esc(b.author)} · ${esc(b.genre)}</div>
+      </div>
+    </div>`).join('');
+}
+
+async function runSingleRule(ruleId) {
+  const rule = window._rules.find(r => r.id===ruleId);
+  if (!rule) return;
+  const matches = getUnassignedBooks().filter(b => ruleMatches(rule, b));
+  if (!matches.length) { showToast('No unassigned books match this rule.'); return; }
+  await applyAssignments(matches.map(b => ({ book: b, rule })));
+  showToast(`Assigned ${matches.length} book${matches.length!==1?'s':''} to Bookcase ${rule.bookcase}, Shelf ${rule.shelf}!`, false, true);
+  renderUnassigned();
+}
+
+async function runAllRules() {
+  const unassigned = getUnassignedBooks();
+  if (!unassigned.length) { showToast('No unassigned books.'); return; }
+  if (!window._rules.length) { showToast('No rules defined.', true); return; }
+
+  document.getElementById('aaStatus').textContent = 'Processing…';
+  document.getElementById('runAllBtn').disabled = true;
+
+  // Find matches per book
+  const assignments = [];
+  const conflicts = [];
+  const noMatch = [];
+
+  for (const book of unassigned) {
+    const matching = window._rules.filter(r => ruleMatches(r, book));
+    if (matching.length === 0) noMatch.push(book);
+    else if (matching.length === 1) assignments.push({ book, rule: matching[0] });
+    else conflicts.push({ book, rules: matching });
+  }
+
+  // Apply non-conflicting first
+  if (assignments.length) await applyAssignments(assignments);
+
+  // Resolve conflicts one by one
+  let resolved = 0;
+  for (const conflict of conflicts) {
+    const chosen = await showConflictModal(conflict.book, conflict.rules);
+    if (chosen) {
+      await applyAssignments([{ book: conflict.book, rule: chosen }]);
+      resolved++;
+    }
+  }
+
+  const total = assignments.length + resolved;
+  const statusParts = [];
+  if (total) statusParts.push(`${total} book${total!==1?'s':''} assigned`);
+  if (noMatch.length) statusParts.push(`${noMatch.length} had no matching rule`);
+  document.getElementById('aaStatus').textContent = statusParts.join(' · ');
+  document.getElementById('runAllBtn').disabled = false;
+  renderUnassigned();
+  if (total) showToast(`Done! ${total} book${total!==1?'s':''} assigned.`, false, true);
+}
+
+async function applyAssignments(assignments) {
+  for (const { book, rule } of assignments) {
+    const update = { bookcase: rule.bookcase, shelf: rule.shelf };
+    if (window._firebaseMode) {
+      await window._updateDoc(window._doc(window._db, 'books', book.id), update).catch(()=>{});
+    } else {
+      const idx = window._books.findIndex(b => b.id===book.id);
+      if (idx>-1) window._books[idx] = { ...window._books[idx], ...update };
+    }
+  }
+  if (!window._firebaseMode) window._saveOffline();
+}
+
+function showConflictModal(book, rules) {
+  return new Promise(resolve => {
+    conflictResolve = resolve;
+    document.getElementById('conflictBook').innerHTML = `
+      ${book.cover ? `<img class="unassigned-item-cover" src="${book.cover}">` : `<div class="unassigned-item-cover-ph">📖</div>`}
+      <div>
+        <div class="conflict-book-title">${esc(book.title)}</div>
+        <div class="conflict-book-meta">${esc(book.author)} · ${esc(book.genre)}</div>
+      </div>`;
+    document.getElementById('conflictRules').innerHTML = rules.map((r,i) => `
+      <button class="conflict-rule-btn" onclick="resolveConflict(${i})">
+        <span>${typeIcon(r.type)}</span>
+        <span class="crb-label">${r.type.charAt(0).toUpperCase()+r.type.slice(1)} rule: <strong>${esc(r.value)}</strong></span>
+        <span class="crb-dest">B${r.bookcase} · S${r.shelf}</span>
+      </button>`).join('');
+    window._conflictRules = rules;
+    document.getElementById('conflictOverlay').style.display = 'flex';
+  });
+}
+
+function resolveConflict(idx) {
+  document.getElementById('conflictOverlay').style.display = 'none';
+  if (conflictResolve) {
+    conflictResolve(idx !== null ? window._conflictRules[idx] : null);
+    conflictResolve = null;
+  }
+}
+
+// ── INIT AUTO-ASSIGN ──
+function initAutoAssign() {
+  // Load rules from Firebase if available
+  if (window._firebaseMode && window._db) {
+    const { onSnapshot: _onSnapshot } = window._fsListeners || {};
+    // Try to load persisted rules from Firestore
+    try {
+      const rulesDoc = window._doc(window._db, 'config', 'assignRules');
+      window._getDoc(rulesDoc).then(snap => {
+        if (snap.exists() && snap.data().list) {
+          window._rules = snap.data().list;
+          localStorage.setItem('mlRules', JSON.stringify(window._rules));
+        }
+        renderRules();
+        renderUnassigned();
+      }).catch(()=>{ renderRules(); renderUnassigned(); });
+    } catch(e) { renderRules(); renderUnassigned(); }
+  } else {
+    renderRules();
+    renderUnassigned();
+  }
+  populateRuleGenreSelect();
+}
+
+window.setRuleType=setRuleType; window.updateRuleShelfOptions=updateRuleShelfOptions;
+window.addRule=addRule; window.deleteRule=deleteRule; window.runSingleRule=runSingleRule;
+window.runAllRules=runAllRules; window.resolveConflict=resolveConflict;
 
 // ── INIT ──
 populateGenreSelects();
