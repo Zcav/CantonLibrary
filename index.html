@@ -16,7 +16,7 @@
      ============================================================ -->
 <script>
   const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyCpcLXfCKWXzCHUxPBEHGtUyAFtNPZXn0Y",
+   apiKey: "AIzaSyCpcLXfCKWXzCHUxPBEHGtUyAFtNPZXn0Y",
   authDomain: "canton-personal-library.firebaseapp.com",
   projectId: "canton-personal-library",
   storageBucket: "canton-personal-library.firebasestorage.app",
@@ -232,6 +232,46 @@ label{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.25em;color:var(
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:.5rem;}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* ── BARCODE SCANNER ── */
+.scan-box{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:1.25rem;margin-bottom:1.5rem;}
+.scan-box-label{font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.28em;color:var(--accent);text-transform:uppercase;margin-bottom:.9rem;}
+.scan-methods{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem;}
+.btn-scan{display:flex;align-items:center;gap:.5rem;font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;padding:.7rem 1.2rem;border:1px solid var(--accent);background:var(--accent-dim);color:var(--accent);border-radius:3px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.btn-scan:hover{background:var(--accent);color:#0d0b0e;}
+.btn-scan:disabled{opacity:.4;cursor:not-allowed;}
+.btn-scan-icon{font-size:1rem;}
+.scan-divider{display:flex;align-items:center;gap:.75rem;color:var(--border2);font-family:'Cinzel',serif;font-size:.52rem;letter-spacing:.2em;margin:.75rem 0;}
+.scan-divider::before,.scan-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.scan-isbn-row{display:flex;gap:.6rem;}
+.scan-isbn-input{flex:1;padding:.65rem .9rem;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;border-radius:4px;outline:none;transition:border-color .2s;}
+.scan-isbn-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(201,169,110,.08);}
+.btn-isbn-lookup{font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;padding:.65rem 1rem;border:1px solid var(--accent);background:var(--accent-dim);color:var(--accent);border-radius:3px;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;}
+.btn-isbn-lookup:hover{background:var(--accent);color:#0d0b0e;}
+.scan-status{margin-top:.6rem;font-size:.82rem;font-style:italic;min-height:1.2em;}
+.scan-status.loading{color:var(--accent);}
+.scan-status.success{color:var(--green);}
+.scan-status.error{color:var(--red);}
+
+/* Camera viewfinder */
+.scanner-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:600;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;}
+.scanner-modal{width:100%;max-width:480px;display:flex;flex-direction:column;align-items:center;gap:1.25rem;}
+.scanner-title{font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.3em;color:var(--accent);text-transform:uppercase;}
+.scanner-viewport{position:relative;width:100%;max-width:400px;border-radius:8px;overflow:hidden;background:#000;box-shadow:0 0 0 2px var(--accent),0 20px 60px rgba(0,0,0,.8);}
+#scannerVideo{width:100%;display:block;max-height:60vh;object-fit:cover;}
+.scanner-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+.scanner-frame{width:75%;height:22%;border:2px solid var(--accent);border-radius:4px;position:relative;box-shadow:0 0 0 9999px rgba(0,0,0,.45);}
+.scanner-frame::before,.scanner-frame::after{content:'';position:absolute;width:18px;height:18px;border-color:var(--accent2);border-style:solid;}
+.scanner-frame::before{top:-2px;left:-2px;border-width:3px 0 0 3px;}
+.scanner-frame::after{bottom:-2px;right:-2px;border-width:0 3px 3px 0;}
+.scanner-line{position:absolute;left:5%;right:5%;height:2px;background:linear-gradient(90deg,transparent,var(--accent2),transparent);animation:scanLine 2s ease-in-out infinite;}
+@keyframes scanLine{0%,100%{top:10%}50%{top:88%}}
+.scanner-hint{font-size:.85rem;color:var(--text2);text-align:center;font-style:italic;}
+.scanner-scan-status{font-size:.9rem;min-height:1.4em;text-align:center;font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.15em;color:var(--accent);}
+.btn-close-scanner{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;padding:.65rem 1.75rem;border:1px solid var(--border2);background:transparent;color:var(--text2);border-radius:3px;cursor:pointer;transition:all .2s;}
+.btn-close-scanner:hover{border-color:var(--text2);color:var(--text);}
+.scanner-success-flash{position:absolute;inset:0;background:rgba(110,201,169,.25);animation:flashGreen .4s ease forwards;}
+@keyframes flashGreen{from{opacity:1}to{opacity:0}}
+
 /* ── AUTO-ASSIGN TAB ── */
 .aa-layout{display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;align-items:start;}
 .aa-panel{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1.5rem;}
@@ -378,8 +418,23 @@ label{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.25em;color:var(
     <div class="add-form">
       <div class="form-title" id="formTitle">Add a new volume</div>
 
-      <div class="lookup-box">
-        <div class="lookup-box-label">✦ Auto-fill from Open Library</div>
+      <div class="scan-box">
+        <div class="scan-box-label">✦ Scan or Search to Auto-fill</div>
+
+        <!-- Camera / file scan buttons -->
+        <div class="scan-methods">
+          <button class="btn-scan" id="btnCameraScan" onclick="startCameraScanner()">
+            <span class="btn-scan-icon">📷</span> Scan Barcode (Camera)
+          </button>
+          <button class="btn-scan" onclick="triggerFileScan()">
+            <span class="btn-scan-icon">🖼</span> Scan from Photo
+          </button>
+          <input type="file" id="fileScanInput" accept="image/*" capture="environment" style="display:none" onchange="scanFromFile(event)">
+        </div>
+
+        <div class="scan-divider">or search by title</div>
+
+        <!-- Title/author text search -->
         <div class="lookup-row">
           <div class="form-group">
             <label for="lookupTitle">Book Title</label>
@@ -391,7 +446,16 @@ label{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.25em;color:var(
           </div>
           <button class="btn-lookup" id="lookupBtn" onclick="lookupBook()">🔍 Look Up</button>
         </div>
-        <div class="lookup-status" id="lookupStatus"></div>
+
+        <div class="scan-divider">or enter ISBN manually</div>
+
+        <!-- Manual ISBN entry -->
+        <div class="scan-isbn-row">
+          <input type="text" class="scan-isbn-input" id="isbnInput" placeholder="ISBN-10 or ISBN-13…" inputmode="numeric" onkeydown="if(event.key==='Enter')lookupByISBN()">
+          <button class="btn-isbn-lookup" onclick="lookupByISBN()">Look Up ISBN</button>
+        </div>
+
+        <div class="scan-status" id="scanStatus"></div>
         <div id="lookupResults" class="lookup-results" style="display:none"></div>
       </div>
 
@@ -561,6 +625,25 @@ label{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.25em;color:var(
 
     </div>
   </div>
+
+<!-- Barcode Scanner Modal -->
+<div id="scannerModalOverlay" class="scanner-modal-overlay" style="display:none">
+  <div class="scanner-modal">
+    <div class="scanner-title">📷 Point at the book's barcode</div>
+    <div class="scanner-viewport">
+      <video id="scannerVideo" autoplay playsinline muted></video>
+      <div class="scanner-overlay">
+        <div class="scanner-frame">
+          <div class="scanner-line"></div>
+        </div>
+      </div>
+      <div id="scannerFlash" style="display:none" class="scanner-success-flash"></div>
+    </div>
+    <div class="scanner-scan-status" id="scannerScanStatus">Align barcode within the frame</div>
+    <div class="scanner-hint">Hold steady · works on ISBN barcodes on the back of books</div>
+    <button class="btn-close-scanner" onclick="stopCameraScanner()">Cancel</button>
+  </div>
+</div>
 
 <!-- Conflict Resolution Modal -->
 <div id="conflictOverlay" class="modal-overlay" style="display:none">
@@ -793,18 +876,90 @@ function setSort(s, e) {
   renderGrid();
 }
 
-// ── OPEN LIBRARY LOOKUP ──
+// ── STATUS HELPER (unified for scan box) ──
+function setScanStatus(msg, type) {
+  const el = document.getElementById('scanStatus');
+  if (!el) return;
+  el.className = 'scan-status' + (type ? ' '+type : '');
+  el.innerHTML = msg;
+}
+
+// ── ISBN LOOKUP (core — used by scanner + manual entry) ──
+async function lookupByISBN(isbnOverride) {
+  const isbn = isbnOverride || document.getElementById('isbnInput').value.trim().replace(/[-\s]/g,'');
+  if (!isbn) { showToast('Please enter an ISBN.', true); return; }
+
+  setScanStatus('<span class="spinner"></span>Looking up ISBN ' + isbn + '…', 'loading');
+  document.getElementById('lookupResults').style.display = 'none';
+
+  try {
+    // Open Library Books API — direct ISBN lookup
+    const resp = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
+    const data = await resp.json();
+    const key = `ISBN:${isbn}`;
+
+    if (!data[key]) {
+      // Fallback to search API
+      const resp2 = await fetch(`https://openlibrary.org/search.json?isbn=${isbn}&fields=key,title,author_name,first_publish_year,publisher,subject,cover_i`);
+      const data2 = await resp2.json();
+      if (data2.docs && data2.docs.length) {
+        window._lookupDocs = data2.docs;
+        await applyResult(0); // auto-apply the first (and likely only) result
+        setScanStatus('✓ Book found and filled in via ISBN!', 'success');
+      } else {
+        setScanStatus('No book found for this ISBN. Try searching by title.', 'error');
+      }
+      return;
+    }
+
+    // Direct hit from Books API
+    const book = data[key];
+    document.getElementById('titleInput').value = book.title || '';
+    document.getElementById('authorInput').value = book.authors ? book.authors[0].name : '';
+    document.getElementById('pubDateInput').value = book.publish_date || '';
+    document.getElementById('publisherInput').value = book.publishers ? book.publishers[0].name : '';
+
+    // Subjects → genre
+    const subjectList = (book.subjects||[]).map(s => typeof s==='string' ? s : s.name||'');
+    const genre = guessGenre(subjectList);
+    if (genre) { populateGenreSelects(); document.getElementById('genreInput').value = genre; }
+
+    // Cover
+    const coverId = book.cover?.large || book.cover?.medium || book.cover?.small;
+    if (coverId) {
+      try {
+        const cr = await fetch(coverId);
+        const blob = await cr.blob();
+        const reader = new FileReader();
+        reader.onload = ev => {
+          pendingCoverData = ev.target.result;
+          document.getElementById('uploadPrompt').style.display = 'none';
+          document.getElementById('coverPreviewContainer').style.display = 'block';
+          document.getElementById('coverPreview').src = pendingCoverData;
+        };
+        reader.readAsDataURL(blob);
+      } catch(e) {}
+    }
+
+    setScanStatus('✓ Book found and filled in via ISBN!', 'success');
+    showToast('Book found! Fields filled in.', false, true);
+    document.getElementById('isbnInput').value = '';
+
+  } catch(err) {
+    setScanStatus('Network error. Please check your connection.', 'error');
+  }
+}
+
+// ── OPEN LIBRARY LOOKUP (title search) ──
 async function lookupBook() {
   const title = document.getElementById('lookupTitle').value.trim();
   const author = document.getElementById('lookupAuthor').value.trim();
   if (!title) { showToast('Please enter a title to search.', true); return; }
 
   const btn = document.getElementById('lookupBtn');
-  const status = document.getElementById('lookupStatus');
   const results = document.getElementById('lookupResults');
   btn.disabled = true;
-  status.className = 'lookup-status loading';
-  status.innerHTML = '<span class="spinner"></span>Searching Open Library…';
+  setScanStatus('<span class="spinner"></span>Searching Open Library…', 'loading');
   results.style.display = 'none';
 
   try {
@@ -814,14 +969,12 @@ async function lookupBook() {
     const data = await resp.json();
 
     if (!data.docs || !data.docs.length) {
-      status.className = 'lookup-status error';
-      status.textContent = 'No results found. Try a different spelling or title.';
+      setScanStatus('No results found. Try a different spelling or title.', 'error');
       btn.disabled = false; return;
     }
 
     window._lookupDocs = data.docs;
-    status.className = 'lookup-status success';
-    status.textContent = `Found ${data.docs.length} result(s) — select one:`;
+    setScanStatus(`Found ${data.docs.length} result(s) — select one:`, 'success');
 
     results.innerHTML = data.docs.map((doc, i) => {
       const coverUrl = doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-S.jpg` : null;
@@ -840,10 +993,139 @@ async function lookupBook() {
     }).join('');
     results.style.display = 'flex';
   } catch(err) {
-    status.className = 'lookup-status error';
-    status.textContent = 'Network error. Please check your connection.';
+    setScanStatus('Network error. Please check your connection.', 'error');
   }
   btn.disabled = false;
+}
+
+// ── BARCODE SCANNING ──
+let scannerStream = null;
+let scannerAnimFrame = null;
+let barcodeDetector = null;
+
+function isBarcodeDetectorSupported() {
+  return 'BarcodeDetector' in window;
+}
+
+async function startCameraScanner() {
+  const overlay = document.getElementById('scannerModalOverlay');
+
+  if (!isBarcodeDetectorSupported()) {
+    // Fallback: open file picker for photo capture
+    showToast('Live scanning not supported on this browser. Use "Scan from Photo" instead.', true);
+    return;
+  }
+
+  try {
+    barcodeDetector = new BarcodeDetector({ formats: ['ean_13','ean_8','isbn','upc_a','upc_e','code_128','code_39'] });
+  } catch(e) {
+    showToast('Barcode scanner not available. Use "Scan from Photo" or enter ISBN manually.', true);
+    return;
+  }
+
+  try {
+    scannerStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+    });
+    const video = document.getElementById('scannerVideo');
+    video.srcObject = scannerStream;
+    await video.play();
+    overlay.style.display = 'flex';
+    document.getElementById('scannerScanStatus').textContent = 'Align barcode within the frame…';
+    scanFrames();
+  } catch(err) {
+    if (err.name === 'NotAllowedError') {
+      showToast('Camera permission denied. Please allow camera access and try again.', true);
+    } else {
+      showToast('Could not access camera: ' + err.message, true);
+    }
+  }
+}
+
+async function scanFrames() {
+  const video = document.getElementById('scannerVideo');
+  if (!scannerStream || !barcodeDetector) return;
+
+  try {
+    const barcodes = await barcodeDetector.detect(video);
+    if (barcodes.length > 0) {
+      const raw = barcodes[0].rawValue;
+      const isbn = extractISBN(raw);
+      if (isbn) {
+        // Flash success
+        const flash = document.getElementById('scannerFlash');
+        flash.style.display = 'block';
+        setTimeout(() => { flash.style.display = 'none'; }, 400);
+        document.getElementById('scannerScanStatus').textContent = '✓ Barcode detected: ' + isbn;
+
+        // Stop scanner and look up
+        stopCameraScanner();
+        await lookupByISBN(isbn);
+        return;
+      }
+    }
+  } catch(e) {}
+
+  // Continue scanning
+  scannerAnimFrame = requestAnimationFrame(scanFrames);
+}
+
+function extractISBN(raw) {
+  // Strip non-digits
+  const digits = raw.replace(/\D/g,'');
+  if (digits.length === 13 || digits.length === 10) return digits;
+  // Sometimes EAN-13 starts with 978/979 — that IS the ISBN-13
+  if (digits.length > 13) return digits.slice(0, 13);
+  return null;
+}
+
+function stopCameraScanner() {
+  if (scannerAnimFrame) { cancelAnimationFrame(scannerAnimFrame); scannerAnimFrame = null; }
+  if (scannerStream) { scannerStream.getTracks().forEach(t => t.stop()); scannerStream = null; }
+  const video = document.getElementById('scannerVideo');
+  video.srcObject = null;
+  document.getElementById('scannerModalOverlay').style.display = 'none';
+}
+
+// Scan from saved photo / camera roll
+function triggerFileScan() {
+  document.getElementById('fileScanInput').click();
+}
+
+async function scanFromFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  event.target.value = '';
+
+  if (!isBarcodeDetectorSupported()) {
+    showToast('Barcode detection not supported on this browser. Please enter the ISBN manually.', true);
+    return;
+  }
+
+  setScanStatus('<span class="spinner"></span>Scanning image for barcode…', 'loading');
+
+  try {
+    barcodeDetector = barcodeDetector || new BarcodeDetector({ formats: ['ean_13','ean_8','isbn','upc_a','upc_e','code_128','code_39'] });
+    const bitmap = await createImageBitmap(file);
+    const barcodes = await barcodeDetector.detect(bitmap);
+
+    if (!barcodes.length) {
+      setScanStatus('No barcode found in this image. Try a clearer photo or enter ISBN manually.', 'error');
+      return;
+    }
+
+    const isbn = extractISBN(barcodes[0].rawValue);
+    if (!isbn) {
+      setScanStatus('Barcode found but could not read as ISBN. Try entering manually.', 'error');
+      return;
+    }
+
+    setScanStatus('✓ Barcode detected: ' + isbn + ' — looking up…', 'success');
+    await lookupByISBN(isbn);
+
+  } catch(err) {
+    setScanStatus('Could not scan image: ' + err.message, 'error');
+  }
 }
 
 function guessGenre(subjects) {
@@ -888,8 +1170,7 @@ async function applyResult(idx) {
   }
 
   document.getElementById('lookupResults').style.display = 'none';
-  document.getElementById('lookupStatus').className = 'lookup-status success';
-  document.getElementById('lookupStatus').textContent = '✓ Fields filled in — review and adjust before saving.';
+  setScanStatus('✓ Fields filled in — review and adjust before saving.', 'success');
   showToast('Book info auto-filled!');
 }
 
@@ -986,7 +1267,8 @@ function resetForm() {
   document.getElementById('coverPreviewContainer').style.display = 'none';
   document.getElementById('coverFile').value = '';
   document.getElementById('coverPreview').src = '';
-  document.getElementById('lookupStatus').textContent = '';
+  document.getElementById('scanStatus').textContent = '';
+  document.getElementById('isbnInput').value = '';
   document.getElementById('lookupResults').style.display = 'none';
   document.getElementById('customGenreRow').style.display = 'none';
   document.getElementById('customGenreInput').value = '';
@@ -1470,6 +1752,9 @@ function initAutoAssign() {
 window.setRuleType=setRuleType; window.updateRuleShelfOptions=updateRuleShelfOptions;
 window.addRule=addRule; window.deleteRule=deleteRule; window.runSingleRule=runSingleRule;
 window.runAllRules=runAllRules; window.resolveConflict=resolveConflict;
+window.startCameraScanner=startCameraScanner; window.stopCameraScanner=stopCameraScanner;
+window.triggerFileScan=triggerFileScan; window.scanFromFile=scanFromFile;
+window.lookupByISBN=lookupByISBN;
 
 // ── INIT ──
 populateGenreSelects();
