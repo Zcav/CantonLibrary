@@ -370,7 +370,7 @@ label{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.25em;color:var(
   </div>
   <div class="header-right">
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.35rem;">
-      <div style="font-family:'Cinzel',serif;font-size:.48rem;letter-spacing:.2em;color:var(--text3);text-transform:uppercase;">v1.7.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:.48rem;letter-spacing:.2em;color:var(--text3);text-transform:uppercase;">v1.8.0</div>
       <div class="db-status">
         <div class="db-dot" id="dbDot"></div>
         <span id="dbStatusText">Connecting…</span>
@@ -425,13 +425,15 @@ label{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.25em;color:var(
 
         <!-- Camera / file scan buttons -->
         <div class="scan-methods">
-          <button class="btn-scan" id="btnCameraScan" onclick="startCameraScanner()">
-            <span class="btn-scan-icon">📷</span> Scan Barcode (Camera)
+          <button class="btn-scan" onclick="triggerCameraCapture()">
+            <span class="btn-scan-icon">📷</span> Take Photo of Barcode
           </button>
           <button class="btn-scan" onclick="triggerFileScan()">
-            <span class="btn-scan-icon">🖼</span> Scan from Photo
+            <span class="btn-scan-icon">🖼</span> Choose Photo from Library
           </button>
-          <input type="file" id="fileScanInput" accept="image/*" capture="environment" style="display:none" onchange="scanFromFile(event)">
+          <!-- capture="environment" opens rear camera directly on iPhone -->
+          <input type="file" id="cameraInput"  accept="image/*" capture="environment" style="display:none" onchange="scanFromFile(event)">
+          <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="scanFromFile(event)">
         </div>
 
         <div class="scan-divider">or search by title</div>
@@ -627,21 +629,6 @@ label{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.25em;color:var(
 
     </div>
   </div>
-
-<!-- Barcode Scanner Modal -->
-<div id="scannerModalOverlay" class="scanner-modal-overlay" style="display:none">
-  <div class="scanner-modal">
-    <div class="scanner-title">📷 Point at the book's barcode</div>
-    <div class="scanner-viewport" style="min-height:260px;display:flex;align-items:center;justify-content:center;">
-      <video id="scannerVideo" autoplay playsinline muted style="display:none"></video>
-      <div id="qrScanRegion" style="width:100%;border-radius:6px;overflow:hidden;"></div>
-      <div id="scannerFlash" style="display:none;position:absolute;inset:0;background:rgba(110,201,169,.3);border-radius:6px;animation:flashGreen .4s ease forwards;pointer-events:none;"></div>
-    </div>
-    <div class="scanner-scan-status" id="scannerScanStatus">Starting…</div>
-    <div class="scanner-hint">Hold phone 15–20 cm from the barcode · good lighting helps</div>
-    <button class="btn-close-scanner" onclick="stopCameraScanner()">Cancel</button>
-  </div>
-</div>
 
 <!-- Conflict Resolution Modal -->
 <div id="conflictOverlay" class="modal-overlay" style="display:none">
@@ -996,160 +983,238 @@ async function lookupBook() {
   btn.disabled = false;
 }
 
-// ── BARCODE SCANNING (html5-qrcode — proven on iPhone Safari) ──
-let scannerActive = false;
-let html5QrScanner = null;
+// ── BARCODE SCANNING — self-contained EAN-13/ISBN decoder ──
+// No external library. Decodes directly from image pixels on canvas.
 
-async function loadHtml5Qr() {
-  if (window.Html5Qrcode) return;
-  return new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
-    s.onload = resolve;
-    s.onerror = () => reject(new Error('Failed to load scanner library'));
-    document.head.appendChild(s);
-  });
-}
-
-async function startCameraScanner() {
-  const overlay = document.getElementById('scannerModalOverlay');
-  overlay.style.display = 'flex';
-  document.getElementById('scannerScanStatus').textContent = 'Loading scanner…';
-  setScanStatus('<span class="spinner"></span>Starting camera…', 'loading');
-
-  try {
-    await loadHtml5Qr();
-
-    // html5-qrcode needs a real DOM element to attach to
-    // We reuse the video element's parent as the container
-    const viewport = document.getElementById('scannerVideo').parentElement;
-
-    // Clear previous content, insert a div for html5-qrcode
-    document.getElementById('scannerVideo').style.display = 'none';
-    let qrDiv = document.getElementById('qrScanRegion');
-    if (!qrDiv) {
-      qrDiv = document.createElement('div');
-      qrDiv.id = 'qrScanRegion';
-      qrDiv.style.cssText = 'width:100%;';
-      viewport.insertBefore(qrDiv, viewport.firstChild);
-    }
-
-    html5QrScanner = new Html5Qrcode('qrScanRegion');
-    scannerActive = true;
-
-    const config = {
-      fps: 15,
-      qrbox: { width: 280, height: 100 },
-      aspectRatio: 1.5,
-      formatsToSupport: [
-        Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.EAN_8,
-        Html5QrcodeSupportedFormats.CODE_128,
-        Html5QrcodeSupportedFormats.UPC_A,
-        Html5QrcodeSupportedFormats.UPC_E,
-      ]
-    };
-
-    await html5QrScanner.start(
-      { facingMode: 'environment' },
-      config,
-      (decodedText) => {
-        if (!scannerActive) return;
-        const isbn = extractISBN(decodedText);
-        if (isbn) handleBarcodeFound(isbn);
-      },
-      () => {} // ignore per-frame errors (no barcode in frame yet)
-    );
-
-    document.getElementById('scannerScanStatus').textContent = 'Align the barcode within the box…';
-    setScanStatus('', '');
-
-  } catch(err) {
-    stopCameraScanner();
-    if (err && (err.toString().includes('NotAllowed') || err.toString().includes('Permission'))) {
-      setScanStatus('Camera permission denied. Go to Settings → Safari → Camera → Allow.', 'error');
-      showToast('Camera permission denied.', true);
-    } else {
-      setScanStatus('Could not start scanner: ' + (err.message||err), 'error');
-      showToast('Scanner error. Try "Scan from Photo" instead.', true);
-    }
-  }
-}
-
-function handleBarcodeFound(isbn) {
-  if (!scannerActive) return;
-  scannerActive = false;
-
-  // Flash green
-  const flash = document.getElementById('scannerFlash');
-  flash.style.display = 'block';
-  setTimeout(() => { flash.style.display = 'none'; }, 500);
-  document.getElementById('scannerScanStatus').textContent = '✓ Found: ' + isbn;
-
-  setTimeout(async () => {
-    stopCameraScanner();
-    await lookupByISBN(isbn);
-  }, 700);
-}
-
-function stopCameraScanner() {
-  scannerActive = false;
-  if (html5QrScanner) {
-    html5QrScanner.stop().catch(()=>{});
-    html5QrScanner = null;
-  }
-  // Restore video element visibility
-  const vid = document.getElementById('scannerVideo');
-  if (vid) vid.style.display = '';
-  document.getElementById('scannerModalOverlay').style.display = 'none';
-}
-
-// ── SCAN FROM PHOTO (camera roll) ──
-function triggerFileScan() {
-  document.getElementById('fileScanInput').click();
-}
+function triggerCameraCapture() { document.getElementById('cameraInput').click(); }
+function triggerFileScan()      { document.getElementById('galleryInput').click(); }
 
 async function scanFromFile(event) {
   const file = event.target.files[0];
   if (!file) return;
   event.target.value = '';
-
-  setScanStatus('<span class="spinner"></span>Scanning image for barcode…', 'loading');
+  setScanStatus('<span class="spinner"></span>Scanning barcode…', 'loading');
 
   try {
-    await loadHtml5Qr();
-
-    // html5-qrcode needs a mounted div — reuse or create a hidden one
-    let tempDiv = document.getElementById('qrTempScan');
-    if (!tempDiv) {
-      tempDiv = document.createElement('div');
-      tempDiv.id = 'qrTempScan';
-      tempDiv.style.display = 'none';
-      document.body.appendChild(tempDiv);
-    }
-
-    const reader = new Html5Qrcode('qrTempScan');
-    const result = await reader.scanFile(file, /* showImage= */ false);
-
-    await reader.clear();
-
-    const isbn = extractISBN(result);
-    if (!isbn) {
-      setScanStatus('Barcode found but not a valid ISBN. Please enter it manually.', 'error');
-      return;
-    }
-
-    setScanStatus('✓ Barcode detected: ' + isbn + ' — looking up…', 'success');
-    await lookupByISBN(isbn);
-
-  } catch(err) {
-    const msg = err ? (err.message || String(err)) : '';
-    if (msg.includes('No MultiFormat') || msg.includes('No barcode') || msg.includes('NotFoundException')) {
-      setScanStatus('No barcode found in this photo. Make sure the ISBN barcode is fully visible and well-lit, then try again.', 'error');
+    const isbn = await decodeISBNFromFile(file);
+    if (isbn) {
+      setScanStatus('✓ Barcode detected: ' + isbn + ' — looking up…', 'success');
+      await lookupByISBN(isbn);
     } else {
-      setScanStatus('Scan failed: ' + msg + '. Try entering the ISBN manually.', 'error');
+      setScanStatus('No barcode found. Try holding the camera closer and making sure the barcode is well-lit, or enter the ISBN manually below.', 'error');
     }
+  } catch(e) {
+    setScanStatus('Scan error: ' + (e.message||e) + '. Please enter ISBN manually.', 'error');
   }
+}
+
+// ── Core decoder ──
+async function decodeISBNFromFile(file) {
+  const img = await loadImage(file);
+
+  // Try multiple crop/scale passes for robustness
+  const attempts = [
+    { sx:0,    sy:0,    sw:1,   sh:1,   scale:1   },  // full image
+    { sx:0,    sy:0.5,  sw:1,   sh:0.5, scale:1.5 },  // bottom half (back cover)
+    { sx:0.1,  sy:0.55, sw:0.8, sh:0.4, scale:2   },  // centre-bottom crop
+    { sx:0,    sy:0.6,  sw:0.6, sh:0.35,scale:2   },  // left-bottom (common barcode position)
+    { sx:0.3,  sy:0.6,  sw:0.7, sh:0.38,scale:2   },  // right-bottom
+    { sx:0,    sy:0,    sw:1,   sh:1,   scale:1.5, rotate:true }, // rotated 90°
+  ];
+
+  for (const a of attempts) {
+    const canvas = cropToCanvas(img, a);
+    // Try each row in the scan band
+    const result = scanCanvas(canvas);
+    if (result) return result;
+  }
+  return null;
+}
+
+function loadImage(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); res(img); };
+    img.onerror = rej;
+    img.src = url;
+  });
+}
+
+function cropToCanvas(img, {sx, sy, sw, sh, scale, rotate}) {
+  const srcX = Math.floor(sx * img.naturalWidth);
+  const srcY = Math.floor(sy * img.naturalHeight);
+  const srcW = Math.floor(sw * img.naturalWidth);
+  const srcH = Math.floor(sh * img.naturalHeight);
+  const dstW  = Math.min(Math.floor(srcW * scale), 1600);
+  const dstH  = Math.min(Math.floor(srcH * scale), 1200);
+
+  const c = document.createElement('canvas');
+  if (rotate) {
+    c.width = dstH; c.height = dstW;
+    const ctx = c.getContext('2d');
+    ctx.translate(dstH/2, dstW/2);
+    ctx.rotate(Math.PI/2);
+    ctx.drawImage(img, srcX, srcY, srcW, srcH, -dstW/2, -dstH/2, dstW, dstH);
+  } else {
+    c.width = dstW; c.height = dstH;
+    c.getContext('2d').drawImage(img, srcX, srcY, srcW, srcH, 0, 0, dstW, dstH);
+  }
+  return c;
+}
+
+function scanCanvas(canvas) {
+  const ctx = canvas.getContext('2d');
+  const { width, height } = canvas;
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const pixels = imageData.data;
+
+  // Convert to greyscale row array, scan multiple horizontal rows
+  const rowFractions = [0.3, 0.4, 0.45, 0.5, 0.55, 0.6, 0.7];
+  for (const frac of rowFractions) {
+    const y = Math.floor(frac * height);
+    const row = getGreyscaleRow(pixels, width, y);
+    const result = tryDecodeEAN13(row) || tryDecodeEAN13(row.slice().reverse());
+    if (result) return result;
+  }
+
+  // Also try averaging 5 rows together (reduces noise)
+  for (const frac of [0.45, 0.5, 0.55]) {
+    const rows = [];
+    for (let dy=-2; dy<=2; dy++) {
+      const y = Math.floor(frac * height) + dy;
+      if (y>=0 && y<height) rows.push(getGreyscaleRow(pixels, width, y));
+    }
+    const avg = rows[0].map((v,i) => Math.round(rows.reduce((s,r)=>s+r[i],0)/rows.length));
+    const result = tryDecodeEAN13(avg) || tryDecodeEAN13(avg.slice().reverse());
+    if (result) return result;
+  }
+  return null;
+}
+
+function getGreyscaleRow(pixels, width, y) {
+  const row = new Uint8Array(width);
+  const base = y * width * 4;
+  for (let x=0; x<width; x++) {
+    const i = base + x*4;
+    row[x] = Math.round(0.299*pixels[i] + 0.587*pixels[i+1] + 0.114*pixels[i+2]);
+  }
+  return row;
+}
+
+// ── EAN-13 decoder ──
+const EAN13_L = {
+  '0001101':'0','0011001':'1','0010011':'2','0111101':'3','0100011':'4',
+  '0110001':'5','0101111':'6','0111011':'7','0110111':'8','0001011':'9'
+};
+const EAN13_G = {
+  '0100111':'0','0110011':'1','0011011':'2','0100001':'3','0011101':'4',
+  '0111001':'5','0000101':'6','0010001':'7','0001001':'8','0010111':'9'
+};
+const EAN13_R = {
+  '1110010':'0','1100110':'1','1101100':'2','1000010':'3','1011100':'4',
+  '1001110':'5','1010000':'6','1000100':'7','1001000':'8','1110100':'9'
+};
+const FIRST_DIGIT = {
+  'LLLLLL':'0','LLGLGG':'1','LLGGLG':'2','LLGGGL':'3','LGLLGG':'4',
+  'LGGLLG':'5','LGGGLL':'6','LGLGLG':'7','LGLGGL':'8','LGGLGL':'9'
+};
+
+function tryDecodeEAN13(row) {
+  // Binarise with adaptive threshold
+  const threshold = adaptiveThreshold(row);
+  let bits = '';
+  for (let i=0; i<row.length; i++) bits += row[i] < threshold ? '1' : '0';
+
+  // Find start guard (101) — scan across possible positions
+  for (let start=0; start<bits.length-94; start++) {
+    if (bits[start]!=='1') continue;
+
+    // Estimate module width from the start guard
+    const guardEnd = findGuardEnd(bits, start);
+    if (!guardEnd) continue;
+    const modWidth = (guardEnd - start) / 3;
+    if (modWidth < 1 || modWidth > 50) continue;
+
+    const result = decodeEAN13AtPosition(bits, start, modWidth);
+    if (result) return result;
+  }
+  return null;
+}
+
+function adaptiveThreshold(row) {
+  const sorted = Array.from(row).sort((a,b)=>a-b);
+  // Use the midpoint between the 20th and 80th percentile
+  const lo = sorted[Math.floor(sorted.length*0.2)];
+  const hi = sorted[Math.floor(sorted.length*0.8)];
+  return (lo+hi)/2;
+}
+
+function findGuardEnd(bits, start) {
+  // start guard is 101
+  if (bits[start]!=='1' || bits[start+1]!=='0' || bits[start+2]!=='1') return null;
+  return start+3;
+}
+
+function decodeEAN13AtPosition(bits, start, mw) {
+  const m = Math.round(mw);
+  if (m < 1) return null;
+
+  // Normalise bits to fixed-width modules
+  function getModules(pos, count) {
+    let s = '';
+    for (let i=0; i<count; i++) {
+      const idx = Math.round(pos + i*mw);
+      if (idx >= bits.length) return null;
+      s += bits[idx];
+    }
+    return s;
+  }
+
+  // Start guard: 3 modules
+  let pos = start + 3;
+
+  // Left 6 digits (7 modules each)
+  const leftPatterns = [];
+  const leftDigits = [];
+  for (let d=0; d<6; d++) {
+    const chunk = getModules(pos, 7);
+    if (!chunk) return null;
+    if (EAN13_L[chunk] !== undefined) { leftDigits.push(EAN13_L[chunk]); leftPatterns.push('L'); }
+    else if (EAN13_G[chunk] !== undefined) { leftDigits.push(EAN13_G[chunk]); leftPatterns.push('G'); }
+    else return null;
+    pos += 7 * mw;
+  }
+
+  // Middle guard: 5 modules (01010)
+  pos += 5 * mw;
+
+  // Right 6 digits (7 modules each)
+  const rightDigits = [];
+  for (let d=0; d<6; d++) {
+    const chunk = getModules(pos, 7);
+    if (!chunk) return null;
+    if (EAN13_R[chunk] !== undefined) rightDigits.push(EAN13_R[chunk]);
+    else return null;
+    pos += 7 * mw;
+  }
+
+  // Determine first digit from left pattern
+  const patternKey = leftPatterns.join('');
+  const firstDigit = FIRST_DIGIT[patternKey];
+  if (firstDigit === undefined) return null;
+
+  const ean = firstDigit + leftDigits.join('') + rightDigits.join('');
+  if (ean.length !== 13) return null;
+  if (!verifyEAN13(ean)) return null;
+  return ean;
+}
+
+function verifyEAN13(code) {
+  let sum = 0;
+  for (let i=0; i<12; i++) sum += parseInt(code[i]) * (i%2===0 ? 1 : 3);
+  const check = (10 - (sum%10)) % 10;
+  return check === parseInt(code[12]);
 }
 
 function guessGenre(subjects) {
@@ -1776,9 +1841,9 @@ function initAutoAssign() {
 window.setRuleType=setRuleType; window.updateRuleShelfOptions=updateRuleShelfOptions;
 window.addRule=addRule; window.deleteRule=deleteRule; window.runSingleRule=runSingleRule;
 window.runAllRules=runAllRules; window.resolveConflict=resolveConflict;
-window.startCameraScanner=startCameraScanner; window.stopCameraScanner=stopCameraScanner;
+window.startCameraScanner=triggerCameraCapture; window.stopCameraScanner=()=>{};
 window.triggerFileScan=triggerFileScan; window.scanFromFile=scanFromFile;
-window.lookupByISBN=lookupByISBN;
+window.lookupByISBN=lookupByISBN; window.triggerCameraCapture=triggerCameraCapture;
 
 // ── INIT ──
 populateGenreSelects();
